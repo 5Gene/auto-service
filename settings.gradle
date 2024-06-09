@@ -1,0 +1,22 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("wings") {
+            from(files("gradle/wings.versions.toml"))
+        }
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "auto-service"
+include ':app'
+//include ':jvm-lib'
+include ':auto-service'
