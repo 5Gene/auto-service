@@ -25,7 +25,6 @@ dependencies {
     implementation(libs.ksp.process.api)
     // https://mvnrepository.com/artifact/com.google.auto.service/auto-service
     implementation(libs.google.auto.service.anno)
-
 }
 
 group = "io.github.5hmla"
