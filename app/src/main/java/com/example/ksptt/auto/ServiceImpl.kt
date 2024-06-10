@@ -20,23 +20,23 @@ class MockServiceImpl : TestService {
     }
 }
 
-@AutoService(TestService::class)
-class FakeServiceImpl : TestService {
-    override fun test(msg: String) {
-        println(msg)
-    }
-}
+//@AutoService(TestService::class)
+//class FakeServiceImpl : TestService {
+//    override fun test(msg: String) {
+//        println(msg)
+//    }
+//}
 
-@AutoService(TestService::class)
-class ThiedServiceImpl : TestService {
-    override fun test(msg: String) {
-        println(msg)
-    }
-}
+//@AutoService(TestService::class)
+//class ThiedServiceImpl : TestService {
+//    override fun test(msg: String) {
+//        println(msg)
+//    }
+//}
 
-@AutoService(TestService::class)
-class Thied22ServiceImpl : TestService {
-    override fun test(msg: String) {
-        println(msg)
-    }
-}
+//@AutoService(TestService::class)
+//class Thied22ServiceImpl : TestService {
+//    override fun test(msg: String) {
+//        println(msg)
+//    }
+//}

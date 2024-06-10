@@ -4,7 +4,6 @@ import wing.publishJava5hmlA
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(wings.plugins.android)
-//    kotlin("jvm") version "2.0.0"
     id("com.vanniktech.maven.publish") version "0.28.0"
 }
 
@@ -28,12 +27,12 @@ dependencies {
 }
 
 group = "io.github.5hmla"
-version = "0.0.1"
+version = "0.0.2"
 
 publishJava5hmlA("ksp library for Google AutoService 🚀")
 
 mavenPublishing {
-    coordinates("io.github.5hmla", "auto-service", "0.0.1")
+    coordinates(group.toString(), "auto-service", version.toString())
 }
 //KSFile
 //  packageName: KSName

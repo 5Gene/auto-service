@@ -8,3 +8,5 @@ class NewServiceImpl : TestService {
         println(msg)
     }
 }
+
+fun test42002() {}
