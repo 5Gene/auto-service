@@ -128,14 +128,14 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
             originatingFiles.add(it.containingFile!!)
         }
         if (serviceImplMap.isNotEmpty()) {
-            generateServicesFile(serviceImplMap, originatingFiles.toList())
+            generateServicesFile(resolver, serviceImplMap, originatingFiles.toList())
         }
         return invalidateAnnotations
     }
 
-    private fun generateServicesFile(serviceImpls: Map<String, MutableSet<String>>, originatingFiles: List<KSFile>) {
-//        generateServicesFileByAggregatingFalse(serviceImpls, originatingFiles)
-        generateServicesFileByAggregatingTrue(serviceImpls, originatingFiles)
+    private fun generateServicesFile(resolver: Resolver, serviceImpls: Map<String, MutableSet<String>>, originatingFiles: List<KSFile>) {
+        generateServicesFileByAggregatingFalse(resolver, serviceImpls, originatingFiles)
+//        generateServicesFileByAggregatingTrue(serviceImpls, originatingFiles)
     }
 
     /**
@@ -148,7 +148,7 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
      *  - 读取生成文件的内容，补充新增扫除的内容
      *  - 通过codeGenerator.createNewFile()写入所有内容，并关联新扫除的源文件，之前关联的ksp会记住
      */
-    private fun generateServicesFileByAggregatingFalse(serviceImpls: Map<String, MutableSet<String>>, originatingFiles: List<KSFile>) {
+    private fun generateServicesFileByAggregatingFalse(resolver: Resolver, serviceImpls: Map<String, MutableSet<String>>, originatingFiles: List<KSFile>) {
         //baseDir = extensionToDirectory(extensionName: String)
         //val file = File(baseDir, path)
         //先读取生成的文件读出所有内容，然后调用createNewFile重新写入，把新增的ksFile关联就好，之前关联的有被记住
@@ -171,11 +171,27 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
             //修改删除相关文件(同时新增)会扫描所有相关文件，会扫到所有注解
             //如果removeAll返回false,表示impls全部不在serviceImplsCache中
             val isAdd = !serviceImplsCache.removeAll(impls)
-            if (isAdd) {
-                //删除了旧的新增了新的会有问题😭
+            //全删除的场景，缓存没删，终于知道为啥ksp没次执行且有变动都要删之前生成的文件了
+            if (serviceImplsCache.isNotEmpty() && isAdd) {
+                //1 单纯新增
+                //2 删除了所有旧的新增了新的会有问题😭
+                //所以这里要确定是不是第二种情况，只要判断旧的文件是否还存在即可
+                val oldClass = serviceImplsCache.random()
+                //文件在，还要看注解是否有
+                //文件存在可能是注解被移出了，检查注解
+                val autoServiceAnnotated = resolver.getClassDeclarationByName(resolver.getKSNameFromString(oldClass))?.annotations?.find {
+                    it.annotationType.resolve().fullClassName() == AUTO_SERVICE_NAME
+                }
+                //上面两种情况都要把新扫描的结果加上
                 toWriteServiceImpls.addAll(impls)
-                toWriteServiceImpls.addAll(serviceImplsCache)
-                "➤ 出现新增了部分注解源文件: ${impls.joinToString()}".yellow.logWarn(logger)
+                if (autoServiceAnnotated == null) {
+                    //classDeclaration==null旧的已经没了说明是第二种情况，就是删除过注解源文件，以新扫描结果为准
+                    "➤ 出现删除旧的所有并新增了部分注解源文件: ${impls.joinToString()}".yellow.logWarn(logger)
+                } else {
+                    toWriteServiceImpls.addAll(serviceImplsCache)
+                    //旧的还在就是单纯新增了 ,为啥被删了还能查到
+                    "➤ 出现新增了部分注解源文件: ${impls.joinToString()}".yellow.logWarn(logger)
+                }
             } else {
                 //没变化，就是修改了关联文件，但是后续也要写入文件，因为每次执行到这之前生成的文件都会被删除
                 toWriteServiceImpls.addAll(impls)
