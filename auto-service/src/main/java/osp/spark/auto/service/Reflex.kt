@@ -1,6 +1,7 @@
 package osp.spark.auto.service
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSFile
 import java.io.File
 import java.lang.reflect.Method
@@ -55,4 +56,29 @@ fun CodeGenerator.extensionToDirectoryCache(extension: String): File {
         .invoke(this, extension) as File
     val extensionToDirectoryCache = extensionToDirectory.absolutePath.replace("generated", "kspCaches")
     return File(extensionToDirectoryCache)
+}
+
+
+fun SymbolProcessorEnvironment.getGeneratedFiles(): Collection<File> {
+    if (codeGenerator.generatedFile.isEmpty()) {
+        "$ $this ➱ environment.codeGenerator.generatedFile > isEmpty !! ".logInfo(logger)
+        val fileMap = codeGenerator.fileMap()
+        return fileMap.values
+    }
+    return codeGenerator.generatedFile
+}
+
+/**
+ * 不能直接往生成的文件里面写内容，这样就无法关联文件了
+ *
+ */
+fun SymbolProcessorEnvironment.getGeneratedFileCacheByNameAndExtension(packageName: String, fileName: String, extension: String): File {
+    val baseDir: File = codeGenerator.extensionToDirectoryCache(extension)
+    val path = codeGenerator.pathOf(packageName, fileName, extension)
+    return File(baseDir, path).apply {
+        if (!exists()) {
+            parentFile.mkdirs()
+            createNewFile()
+        }
+    }
 }

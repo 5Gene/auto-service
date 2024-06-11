@@ -9,4 +9,4 @@ class NewServiceImpl : TestService {
     }
 }
 
-fun test42002() {}
+fun test() {}

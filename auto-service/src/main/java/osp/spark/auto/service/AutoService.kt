@@ -11,35 +11,9 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
-import java.io.File
 import java.io.FileWriter
 
 const val AUTO_SERVICE_NAME = "com.google.auto.service.AutoService"
-
-val String.yellow: String
-    get() = "\u001B[93m${this}\u001B[0m"
-
-fun KSType.fullClassName() = declaration.qualifiedName!!.asString()
-
-val String.lookDown: String
-    get() = "👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇 $this 👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇"
-
-val String.lookup: String
-    get() = "👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆 $this 👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆"
-
-//val logLevel = LogLevel.values().first {
-//    project.logger.isEnabled(it)
-//}
-//cfg.logLevel.value(logLevel)
-
-//org.gradle.logging.level=info
-fun String.logInfo(logger: KSPLogger) {
-    logger.info(this)
-}
-
-fun String.logWarn(logger: KSPLogger) {
-    logger.warn(this)
-}
 
 /**
  * - Create a file named `META-INF/services/<interface>`
@@ -49,30 +23,6 @@ fun String.logWarn(logger: KSPLogger) {
 class AutoServiceProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return AutoServiceProcessor(environment)
-    }
-}
-
-fun SymbolProcessorEnvironment.getGeneratedFiles(): Collection<File> {
-    if (codeGenerator.generatedFile.isEmpty()) {
-        "$ $this ➱ environment.codeGenerator.generatedFile > isEmpty !! ".logInfo(logger)
-        val fileMap = codeGenerator.fileMap()
-        return fileMap.values
-    }
-    return codeGenerator.generatedFile
-}
-
-/**
- * 不能直接往生成的文件里面写内容，这样就无法关联文件了
- *
- */
-fun SymbolProcessorEnvironment.getGeneratedFileCacheByNameAndExtension(packageName: String, fileName: String, extension: String): File {
-    val baseDir: File = codeGenerator.extensionToDirectoryCache(extension)
-    val path = codeGenerator.pathOf(packageName, fileName, extension)
-    return File(baseDir, path).apply {
-        if (!exists()) {
-            parentFile.mkdirs()
-            createNewFile()
-        }
     }
 }
 
@@ -159,7 +109,7 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
             logger.warn(">$roundIndex ➤  $resourceFile")
             //通过反射获取生成的文件路径
             val generatedFileCache = environment.getGeneratedFileCacheByNameAndExtension("", resourceFile, "")
-            "➱ generatedFile from cache >>> $generatedFileCache".yellow.logWarn(logger)
+            "➱ generatedFile from cache >>> $generatedFileCache".logInfo(logger)
             val serviceImplsCache = mutableSetOf<String>()
             generatedFileCache.readLines().forEach {
                 if (it.isNotEmpty()) {
@@ -171,7 +121,7 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
             //修改删除相关文件(同时新增)会扫描所有相关文件，会扫到所有注解
             //如果removeAll返回false,表示impls全部不在serviceImplsCache中
             val isAdd = !serviceImplsCache.removeAll(impls)
-            //全删除的场景，缓存没删，终于知道为啥ksp没次执行且有变动都要删之前生成的文件了
+            //全删除的场景，新定义的缓存没删，不过不影响，终于知道为啥ksp没次执行且有变动都要删之前生成的文件了
             if (serviceImplsCache.isNotEmpty() && isAdd) {
                 //1 单纯新增
                 //2 删除了所有旧的新增了新的会有问题😭
@@ -186,7 +136,7 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
                 toWriteServiceImpls.addAll(impls)
                 if (autoServiceAnnotated == null) {
                     //classDeclaration==null旧的已经没了说明是第二种情况，就是删除过注解源文件，以新扫描结果为准
-                    "➤ 出现删除旧的所有并新增了部分注解源文件: ${impls.joinToString()}".yellow.logWarn(logger)
+                    "➤ 出现删除旧的所有, 扫描出了所有注解,忽略缓存，并新增了部分注解源文件: ${impls.joinToString()}".yellow.logWarn(logger)
                 } else {
                     toWriteServiceImpls.addAll(serviceImplsCache)
                     //旧的还在就是单纯新增了 ,为啥被删了还能查到
@@ -302,3 +252,31 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
         }
     }
 }
+
+
+//<editor-fold desc="extensions for kt">
+val String.yellow: String
+    get() = "\u001B[93m${this}\u001B[0m"
+
+fun KSType.fullClassName() = declaration.qualifiedName!!.asString()
+
+val String.lookDown: String
+    get() = "👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇 $this 👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇"
+
+val String.lookup: String
+    get() = "👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆 $this 👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆"
+
+//val logLevel = LogLevel.values().first {
+//    project.logger.isEnabled(it)
+//}
+//cfg.logLevel.value(logLevel)
+
+//org.gradle.logging.level=info
+fun String.logInfo(logger: KSPLogger) {
+    logger.info(this)
+}
+
+fun String.logWarn(logger: KSPLogger) {
+    logger.warn(this)
+}
+//</editor-fold>
