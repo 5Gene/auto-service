@@ -11,6 +11,6 @@ generate META-INF/services/xxxxx  for 【AutoService】
 ## 添加依赖
 
 ```kotlin
-implementation("io.github.5hmla:auto-service:0.0.1")
+implementation("io.github.5hmla:auto-service:0.0.4")
 implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 ```

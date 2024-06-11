@@ -4,7 +4,9 @@ import wing.publishJava5hmlA
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(wings.plugins.android)
-    id("com.vanniktech.maven.publish") version "0.28.0"
+//    signing
+    id("signing")
+    id("maven-publish")
 }
 
 kotlin {
@@ -27,13 +29,27 @@ dependencies {
 }
 
 group = "io.github.5hmla"
-version = "0.0.3"
+version = "0.0.4"
+
+val projectName = name
 
 publishJava5hmlA("ksp library for Google AutoService 🚀")
 
-mavenPublishing {
-    coordinates(group.toString(), "auto-service", version.toString())
+tasks.register<Zip>("zipForPublish") {
+    group = "5hmlA"
+    dependsOn(tasks["publishSparkPublicationToLocalRepoRepository"])
+    archiveBaseName = projectName
+    destinationDirectory.set(file("repos"))
+    from("repos") {
+        include("**/*")
+    }
+    into("repos")
 }
+
+signing {
+    sign(tasks["zipForPublish"])
+}
+
 //KSFile
 //  packageName: KSName
 //  fileName: String
