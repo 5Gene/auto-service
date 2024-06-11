@@ -61,15 +61,28 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
             //每个注解支持多个参数，每个参数(key=value)这里value也支持多个，
             // AutoService(Class<?>[] value())实际上支持多个class
             val serviceFullNames = mutableListOf<String>()
-            (argument.value as List<*>).map { it as KSType }.forEach { argType ->
-                //service接口名
-                val serviceFullName = argType.fullClassName()
+            if (argument.value is KSType) {
+                //java中 - @AutoService({TaskService.class})java这样注解 这里拿到的value是List
+                //java中 - @AutoService(TaskService.class)java这样注解 这里拿到的value是KSType不是list
+                val serviceFullName = (argument.value as KSType).fullClassName()
                 serviceFullNames.add(serviceFullName)
-                ">$roundIndex 接口名 > $serviceFullName".logInfo(logger)
+                ">$roundIndex 接口名 > $serviceFullName".logWarn(logger)
                 serviceImplMap.getOrPut(serviceFullName) {
                     mutableSetOf()
                 }.add(beAnnotatedFullClassName)
+            } else {
+                //kotlin中不管咋样这里都和AutoService的value的签名一样是多个，类型是List
+                (argument.value as List<*>).map { it as KSType }.forEach { argType ->
+                    //service接口名
+                    val serviceFullName = argType.fullClassName()
+                    serviceFullNames.add(serviceFullName)
+                    ">$roundIndex 接口名 > $serviceFullName".logWarn(logger)
+                    serviceImplMap.getOrPut(serviceFullName) {
+                        mutableSetOf()
+                    }.add(beAnnotatedFullClassName)
+                }
             }
+
             ">$roundIndex @AutoService(${serviceFullNames.joinToString()})".logInfo(logger)
             ">$roundIndex $beAnnotatedFullClassName".logInfo(logger)
             "🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰🟰".logInfo(logger)
@@ -114,44 +127,51 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
             generatedFileCache.readLines().forEach {
                 if (it.isNotEmpty()) {
                     serviceImplsCache.add(it)
-                    "➱ cache >> $it".logWarn(logger)
+                    "➱ cache >> $it".logInfo(logger)
                 }
             }
-            //优先判断是不是新增，单独新增的话，缓存一定没有
-            //修改删除相关文件(同时新增)会扫描所有相关文件，会扫到所有注解
-            //如果removeAll返回false,表示impls全部不在serviceImplsCache中
-            val isAdd = !serviceImplsCache.removeAll(impls)
-            //全删除的场景，新定义的缓存没删，不过不影响，终于知道为啥ksp没次执行且有变动都要删之前生成的文件了
-            if (serviceImplsCache.isNotEmpty() && isAdd) {
-                //1 单纯新增
-                //2 删除了所有旧的新增了新的会有问题😭
-                //所以这里要确定是不是第二种情况，只要判断旧的文件是否还存在即可
-                val oldClass = serviceImplsCache.random()
-                //文件在，还要看注解是否有
-                //文件存在可能是注解被移出了，检查注解
-                val autoServiceAnnotated = resolver.getClassDeclarationByName(resolver.getKSNameFromString(oldClass))?.annotations?.find {
-                    it.annotationType.resolve().fullClassName() == AUTO_SERVICE_NAME
-                }
-                //上面两种情况都要把新扫描的结果加上
-                toWriteServiceImpls.addAll(impls)
-                if (autoServiceAnnotated == null) {
-                    //classDeclaration==null旧的已经没了说明是第二种情况，就是删除过注解源文件，以新扫描结果为准
-                    "➤ 出现删除旧的所有, 扫描出了所有注解,忽略缓存，并新增了部分注解源文件: ${impls.joinToString()}".yellow.logWarn(logger)
+            //只要判断有缓存和没缓存的情况
+            if (serviceImplsCache.isNotEmpty()) {
+                //有缓存的情况下只要判断两种场景
+                // - 单纯新增
+                // - 修改|删除
+                //全删除的场景，新定义的缓存没删，不过不影响，终于知道为啥ksp没次执行且有变动都要删之前生成的文件了
+                //修改删除相关文件(同时新增)会扫描所有相关文件，会扫到所有注解
+                //如果removeAll返回false,表示impls全部不在serviceImplsCache中
+                if (!serviceImplsCache.removeAll(impls)) {
+                    //这个分支一定是新增了，但是也要区分一下两种情况
+                    // - 1 单纯新增，旧的缓存+新增注解，新增注解只会扫除新增的那一个
+                    // - 2 删除了所有旧的新增缓存没有的，删除会扫所有注解，以新扫出的为准
+                    //上面两种情况都要把新扫描的结果加上
+                    toWriteServiceImpls.addAll(impls)
+
+                    //所以这里要确定是不是第二种情况，只要判断旧的文件是否还存在即可
+                    val oldClass = serviceImplsCache.random()
+                    //文件在，还要看注解是否有, 因为文件存在可能是注解被移出了，检查注解
+                    val autoServiceAnnotated = resolver.getClassDeclarationByName(resolver.getKSNameFromString(oldClass))?.annotations?.find {
+                        it.annotationType.resolve().fullClassName() == AUTO_SERVICE_NAME
+                    }
+                    if (autoServiceAnnotated == null) {
+                        //classDeclaration==null旧的已经没了说明是第二种情况，就是删除过注解源文件，以新扫描结果为准
+                        "➤ 出现删除旧的所有, 扫描出了所有注解,忽略缓存，并新增了部分注解源文件: ${impls.joinToString()}".yellow.logWarn(logger)
+                    } else {
+                        //旧的还在就说明是单纯新增了，把缓存中旧的类加上即可
+                        toWriteServiceImpls.addAll(serviceImplsCache)
+                        "➤ 出现新增了部分注解源文件: ${impls.joinToString()}".yellow.logWarn(logger)
+                    }
                 } else {
-                    toWriteServiceImpls.addAll(serviceImplsCache)
-                    //旧的还在就是单纯新增了 ,为啥被删了还能查到
-                    "➤ 出现新增了部分注解源文件: ${impls.joinToString()}".yellow.logWarn(logger)
+                    //缓存中包含新扫出的，说明不是单纯的新增，就是修改|删除了关联文件，
+                    //只是修改，那么扫出的注解和缓存的注解一样，但是后续也要写入文件，因为每次执行到这之前生成的文件都会被删除
+                    toWriteServiceImpls.addAll(impls)
+                    "➤ 可能出现删除|修改关联文件(可能同时有新增注解文件)部分注解源文件, 扫描出了所有注解,忽略缓存 ".yellow.logWarn(logger)
                 }
             } else {
-                //没变化，就是修改了关联文件，但是后续也要写入文件，因为每次执行到这之前生成的文件都会被删除
                 toWriteServiceImpls.addAll(impls)
-                "➤ 可能出现删除|修改关联文件(可能同时有新增注解文件)部分注解源文件, 扫描出了所有注解,忽略缓存 ".yellow.logWarn(logger)
+                "➤ 无缓存，新增注解源文件, 扫描出了所有注解 ".yellow.logWarn(logger)
             }
 
             val resultContent = toWriteServiceImpls.joinToString(System.lineSeparator())
-
             logger.warn(service.lookDown)
-
             if (roundIndex > 1) {
                 //非第一轮，说明process自动生成了注解, 要移出上次fileMap的key否则生成文件会报错FileAlreadyExistsException
                 val path = environment.getGeneratedPathByNameAndExtension("", resourceFile, "")
