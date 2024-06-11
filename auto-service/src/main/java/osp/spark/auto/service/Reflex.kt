@@ -20,6 +20,10 @@ fun <T> Any.getDeclaredField2(name: String): T {
     return field.get(this) as T
 }
 
+
+// 以下反射来自源码
+// https://github1s.com/google/ksp/blob/main/common-util/src/main/kotlin/com/google/devtools/ksp/common/impl/CodeGeneratorImpl.kt
+
 fun CodeGenerator.projectBase(): File {
     return getDeclaredField2("projectBase")
 }
@@ -32,7 +36,7 @@ fun CodeGenerator.anyChangesWildcard(): KSFile {
     return getDeclaredField2("anyChangesWildcard")
 }
 
-fun CodeGenerator.fileMap(): Map<String, File> {
+fun CodeGenerator.fileMap(): MutableMap<String, File> {
     return getDeclaredField2("fileMap")
 }
 
@@ -51,6 +55,13 @@ fun CodeGenerator.pathOf(packageName: String, fileName: String, extension: Strin
 //    }
 //}
 fun CodeGenerator.extensionToDirectoryCache(extension: String): File {
+    // baseDir = extensionToDirectory(extensionName: String)
+    val extensionToDirectory = getDeclaredMethod2("extensionToDirectory", String::class.java)
+        .invoke(this, extension) as File
+    val extensionToDirectoryCache = extensionToDirectory.absolutePath.replace("generated", "kspCaches")
+    return File(extensionToDirectoryCache)
+}
+fun CodeGenerator.extensionToDirectory(extension: String): File {
     // baseDir = extensionToDirectory(extensionName: String)
     val extensionToDirectory = getDeclaredMethod2("extensionToDirectory", String::class.java)
         .invoke(this, extension) as File
@@ -81,4 +92,9 @@ fun SymbolProcessorEnvironment.getGeneratedFileCacheByNameAndExtension(packageNa
             createNewFile()
         }
     }
+}
+
+fun SymbolProcessorEnvironment.getGeneratedPathByNameAndExtension(packageName: String, fileName: String, extension: String): String {
+    val baseDir: File = codeGenerator.extensionToDirectory(extension)
+    return codeGenerator.pathOf(packageName, fileName, extension)
 }

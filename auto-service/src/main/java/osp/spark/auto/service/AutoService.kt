@@ -152,6 +152,12 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
 
             logger.warn(service.lookDown)
 
+            if (roundIndex > 1) {
+                //非第一轮，说明process自动生成了注解, 要移出上次fileMap的key否则生成文件会报错FileAlreadyExistsException
+                val path = environment.getGeneratedPathByNameAndExtension("", resourceFile, "")
+                environment.codeGenerator.fileMap().remove(path)
+            }
+
             //aggregating=true 上面代码看此时会把任意变化的文件都加如到关联文件，也就是说任意文件修改都会导致扫描所有关联文件
             // 【新增任意文件】ksp会扫到所有注解，
             // 删除的如果是关联的文件，ksp会扫描所有关联文件，扫出所有注解

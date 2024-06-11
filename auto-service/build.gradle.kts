@@ -27,7 +27,7 @@ dependencies {
 }
 
 group = "io.github.5hmla"
-version = "0.0.2"
+version = "0.0.3"
 
 publishJava5hmlA("ksp library for Google AutoService 🚀")
 
