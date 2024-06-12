@@ -1,12 +1,9 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import wing.publishJava5hmlA
+import wing.publishMavenCentral
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(wings.plugins.android)
-//    signing
-    id("signing")
-    id("maven-publish")
 }
 
 kotlin {
@@ -31,24 +28,10 @@ dependencies {
 group = "io.github.5hmla"
 version = "0.0.4"
 
-val projectName = name
+val signingKey = """"""
 
-publishJava5hmlA("ksp library for Google AutoService 🚀")
+publishMavenCentral("ksp library for Google AutoService 🚀", "java", signingKey)
 
-tasks.register<Zip>("zipForPublish") {
-    group = "5hmlA"
-    dependsOn(tasks["publishSparkPublicationToLocalRepoRepository"])
-    archiveBaseName = projectName
-    destinationDirectory.set(file("repos"))
-    from("repos") {
-        include("**/*")
-    }
-    into("repos")
-}
-
-signing {
-    sign(tasks["zipForPublish"])
-}
 
 //KSFile
 //  packageName: KSName
