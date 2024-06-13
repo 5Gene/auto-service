@@ -35,8 +35,8 @@ jobs:
       # Runs a single command using the runners shell
       - name: 🔥 publishing to MavenCentral
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          chmod +x ./gradlew
+          ./gradlew publishToMavenCentral
         env:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
           mavenCentralUsername: ${{ secrets.MAVEN_NAME }}
