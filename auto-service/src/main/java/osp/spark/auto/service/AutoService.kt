@@ -16,6 +16,7 @@ import java.io.FileWriter
 const val AUTO_SERVICE_NAME = "com.google.auto.service.AutoService"
 
 /**
+ * - find kspxxxKotlin in tasks
  * - Create a file named `META-INF/services/<interface>`
  * - For each [AutoService] annotated class for this interface
  * - Create an entry in the file
