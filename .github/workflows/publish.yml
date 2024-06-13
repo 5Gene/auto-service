@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: publish plugin
+name: publish
 
 # Controls when the workflow will run
 on:
@@ -36,7 +36,7 @@ jobs:
       - name: 🔥 publishing to MavenCentral
         run: |
           chmod +x gradlew
-          ./gradlew publishToMavenCentral
+          ./gradlew assembleDebug
         env:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
           mavenCentralUsername: ${{ secrets.MAVEN_NAME }}
