@@ -38,7 +38,8 @@ jobs:
           chmod +x ./gradlew
           ./gradlew publishToMavenCentral
         env:
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+          SIGN_GPG_KEY: ${{ secrets.SIGN_GPG_KEY }}
+          SIGN_GPG_PASSWORD: ${{ secrets.SIGN_GPG_PASSWORD }}
           mavenCentralUsername: ${{ secrets.MAVEN_NAME }}
           mavenCentralPassword: ${{ secrets.MAVEN_PASSWORD }}
           GITHUB_USER: ${{ secrets.NAME_GITHUB }}

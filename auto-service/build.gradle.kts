@@ -28,8 +28,6 @@ dependencies {
 group = "io.github.5hmla"
 version = "0.0.6"
 
-val signingKey = """xx"""
-
 publishMavenCentral("ksp library for Google AutoService 🚀", "java")
 
 
