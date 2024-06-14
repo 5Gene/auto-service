@@ -30,7 +30,7 @@ version = "0.0.6"
 
 val signingKey = """xx"""
 
-publishMavenCentral("ksp library for Google AutoService 🚀", "java", signingKey)
+publishMavenCentral("ksp library for Google AutoService 🚀", "java")
 
 
 //KSFile
