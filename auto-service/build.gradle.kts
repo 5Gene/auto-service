@@ -8,9 +8,9 @@ plugins {
 
 kotlin {
     // Or shorter:
-    jvmToolchain(18)
+    jvmToolchain(17)
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_18)
+        jvmTarget.set(JvmTarget.JVM_17)
         freeCompilerArgs.add("-Xcontext-receivers")
         apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
         languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
@@ -26,7 +26,7 @@ dependencies {
 }
 
 group = "io.github.5hmla"
-version = "0.0.6"
+version = "0.0.7"
 
 publishMavenCentral("ksp library for Google AutoService 🚀", "java")
 
