@@ -21,7 +21,6 @@ sparkj-adapter = { module = "osp.sparkj.ui:adapter", version.ref = "adapter" }
 
 
 [bundles]
-sparkj = ["sparkj-view-dsl", "sparkj-cubic", "sparkj-cartoon"]
 
 [plugins]
 compose = { id = "io.github.5hmlA.android.compose", version.ref = "conventions" }
