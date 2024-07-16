@@ -3,7 +3,17 @@ import wing.publishMavenCentral
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(wings.plugins.android)
+}
+
+buildscript {
+    repositories {
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
+    }
+    dependencies {
+        classpath(wings.conventions)
+    }
 }
 
 kotlin {
@@ -26,7 +36,7 @@ dependencies {
 }
 
 group = "io.github.5hmla"
-version = "0.0.7"
+version = wings.versions.auto.service.get()
 
 publishMavenCentral("ksp library for Google AutoService 🚀", "java")
 

@@ -190,14 +190,13 @@ class AutoServiceProcessor(private val environment: SymbolProcessorEnvironment) 
             // 删除的如果是【关联的文件】，ksp会扫描所有关联文件，扫出所有注解
             // 修改一个【非关联的文件】，ksp会执行，但是不会扫出注解内容，也就是只扫描修改的文件，所以没扫到注解
             // 修改一个【关联的文件】，ksp会执行，会扫描所有关联文件，扫到所有注解
-            val constructor = Dependencies::class.java.getDeclaredConstructor(Boolean::class.java, Boolean::class.java, List::class.java)
-            constructor.isAccessible = true
+            val dependencies = Dependencies(false, *originatingFiles.toTypedArray())
 
             //💯>所以originatingFiles这个参数一定要有，表示生成的这个文件和哪些源文件有关联，当删除的时候会被通知到全部更新
             //先读取生成的文件读出所有内容，然后调用createNewFile重新写入，把新增的ksFile关联就好，之前关联的有被记住
             //每次执行process都会删除生成的文件
             environment.codeGenerator.createNewFile(
-                constructor.newInstance(false, false, originatingFiles), "", resourceFile, ""
+                dependencies, "", resourceFile, ""
             ).bufferedWriter().use { writer ->
                 toWriteServiceImpls.forEach {
                     writer.write(it)
