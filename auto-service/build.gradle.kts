@@ -1,8 +1,7 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import wing.publishMavenCentral
 
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    alias(vcl.plugins.kotlin.jvm)
 }
 
 buildscript {
@@ -12,31 +11,18 @@ buildscript {
         }
     }
     dependencies {
-        classpath(wings.conventions)
-    }
-}
-
-kotlin {
-    // Or shorter:
-    jvmToolchain(17)
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-        freeCompilerArgs.add("-Xcontext-receivers")
-        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
-        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+        classpath(vcl.gene.conventions)
     }
 }
 
 //https://kotlinlang.org/docs/ksp-incremental.html#aggregating-vs-isolating
 dependencies {
-//    implementation("com.squareup:kotlinpoet-ksp:1.16.0")
-    implementation(libs.ksp.process.api)
+    implementation(vcl.ksp.process.api)
     // https://mvnrepository.com/artifact/com.google.auto.service/auto-service
-    implementation(libs.google.auto.service.anno)
+    implementation(vcl.google.auto.service.anno)
 }
-
 group = "io.github.5hmla"
-version = wings.versions.auto.service.get()
+version = libs.versions.gene.auto.service.get()
 
 publishMavenCentral("ksp library for Google AutoService 🚀", "java")
 
