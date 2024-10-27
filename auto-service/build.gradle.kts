@@ -1,4 +1,4 @@
-import wing.publishMavenCentral
+import june.wing.publishJavaMavenCentral
 
 plugins {
     alias(vcl.plugins.kotlin.jvm)
@@ -24,7 +24,7 @@ dependencies {
 group = "io.github.5hmla"
 version = libs.versions.gene.auto.service.get()
 
-publishMavenCentral("ksp library for Google AutoService 🚀", "java")
+publishJavaMavenCentral("ksp library for Google AutoService 🚀")
 
 
 //KSFile
