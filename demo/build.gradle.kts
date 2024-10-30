@@ -8,6 +8,10 @@ ksp {
     arg("option2", "value2")
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    //upToDate设置为false, 每次都执行ksp任务
+    outputs.upToDateWhen { false }
+}
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
