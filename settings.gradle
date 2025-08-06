@@ -7,7 +7,17 @@ pluginManagement {
 }
 
 plugins {
-    id("io.github.5hmlA.vcl") version "2025.08.05"
+    id("io.github.5hmlA.vcl") version "2025.07.03"
+}
+
+vcl {
+    onCreate {
+        it.version("google-ksp", "2.2.0-2.0.2")
+//        it.version("gene-conventions", "2025.08.05")
+    }
+    doOverride {
+        version("gene-conventions", "2025.08.05")
+    }
 }
 
 dependencyResolutionManagement {
@@ -19,3 +29,4 @@ dependencyResolutionManagement {
 rootProject.name = "auto-service"
 include ':demo'
 include ':auto-service'
+
